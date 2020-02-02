@@ -22,19 +22,22 @@ import org.greenrobot.eventbus.ThreadMode;
 public class InventoryActivity extends AppCompatActivity {
     private EditText barcodeEditText,quantityEditText,serialEditText;
 
-    private ZebraBarcodeReceiver zRec;
+    private ZebraBarcodeReceiver zebraBarcodeReceiver;
     private ZebraDataWedgeHelper zebraDataWedgeHelper;
-    private boolean IfZebraDevice= false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // region Zebra
         if(android.os.Build.MANUFACTURER.contains("Zebra Technologies") ||
                 android.os.Build.MANUFACTURER.contains("Motorola Solutions") ) {
-            IfZebraDevice=true;
+            zebraDataWedgeHelper = new ZebraDataWedgeHelper(this);
+            zebraBarcodeReceiver =  new ZebraBarcodeReceiver (this);
         }
+        //endregion Zebra
 
         barcodeEditText = (EditText) findViewById(R.id.barcodeEditText);
         quantityEditText = (EditText) findViewById(R.id.qntyEditText);
@@ -50,18 +53,15 @@ public class InventoryActivity extends AppCompatActivity {
             }
         });
 
-
-if (IfZebraDevice) {
-    zebraDataWedgeHelper = new ZebraDataWedgeHelper(this);
-    zRec =  new ZebraBarcodeReceiver (this);
-}
-
        barcodeEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if (hasFocus) {
-                    zebraDataWedgeHelper.ScannerInputPluginEnable();
-                   //zebraDataWedgeHelper.ProfileOnOff("true");
+                    //region Zebra
+                    if (zebraBarcodeReceiver != null) {
+                        zebraDataWedgeHelper.ScannerInputPluginEnable();
+                    }
+                    //endregion Zebra
                 }
             }
         });
@@ -70,57 +70,82 @@ if (IfZebraDevice) {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if (hasFocus) {
-                    zebraDataWedgeHelper.ScannerInputPluginDisable();
-                   // zebraDataWedgeHelper.ProfileOnOff("false");
+                    //region Zebra
+                    if (zebraBarcodeReceiver != null) {
+                        zebraDataWedgeHelper.ScannerInputPluginDisable();
+                    }
+                    //endregion Zebra
+
                 }
             }
         });
 
+        serialEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus) {
+                    //region Zebra
+                    if (zebraBarcodeReceiver != null) {
+                        zebraDataWedgeHelper.ScannerInputPluginEnable();
+                    }
+                    //endregion Zebra
+                }
+            }
+        });
     }
 
 
-
+    // region Zebra event bus
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(BarcodeScanEvent event) {
-        /* Do something */
-        String decodedData = event.getDecodedData();
-        // store decoder type
-        String decodedLabelType = event.getDecodedLabelType();
-        boolean ifSelmetDataWedgeProfileExist = event.isIfSelmetDataWedgeProfileExist();
-        boolean isBarcodeRead=event.isBarcoderRead();
+        /* Do something - barcode */
+        //String decodedData = event.getDecodedData();
+        // decoder type
+        //String decodedLabelType = event.getDecodedLabelType();
+        //
+        //boolean ifSelmetDataWedgeProfileExist = event.isIfSelmetDataWedgeProfileExist();
+        //boolean isBarcodeRead=event.isBarcoderRead();
 
        //If SelmetDW profile doesn't exist create it
-        if (!ifSelmetDataWedgeProfileExist && !isBarcodeRead)
+        if (!event.isIfSelmetDataWedgeProfileExist() && !event.isBarcoderRead())
             zebraDataWedgeHelper.CreateProfile();
 
 
-        if (barcodeEditText.hasFocus() && isBarcodeRead)
-            barcodeEditText.setText(decodedData);
-        if (serialEditText.hasFocus() && isBarcodeRead)
-            serialEditText.setText(decodedData);
+        if (barcodeEditText.hasFocus() && event.isBarcoderRead()) {
+            barcodeEditText.setText(event.getDecodedData());
+            quantityEditText.setText("1");
+            quantityEditText.selectAll();
+            quantityEditText.requestFocus();
+        }
+        if (serialEditText.hasFocus() && event.isBarcoderRead())
+            serialEditText.setText(event.getDecodedData());
     }
+    // endregion Zebra event bus
 
     @Override
     protected void onResume()
     {
         super.onResume();
-        if (IfZebraDevice) {
-            zRec.registerReceivers(zRec);
+        // region Zebra
+        if (zebraBarcodeReceiver != null) {
+            zebraBarcodeReceiver.registerReceivers(zebraBarcodeReceiver);
             zebraDataWedgeHelper.GetProfileList();
-
             zebraDataWedgeHelper.SetDefaultConfig();
         }
+        //endregion Zebra
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
-        if (IfZebraDevice) {
-            zRec.unRegisterReceivers(zRec);
-            zRec.unRegisterScannerStatus();
+        // region Zebra
+        if (zebraBarcodeReceiver != null) {
+            zebraBarcodeReceiver.unRegisterReceivers(zebraBarcodeReceiver);
+            zebraBarcodeReceiver.unRegisterScannerStatus();
             EventBus.getDefault().unregister(this);
         }
+        //endregion Zebra
     }
 
     @Override
@@ -133,16 +158,20 @@ if (IfZebraDevice) {
     protected void onStart()
     {
         super.onStart();
-        if (IfZebraDevice)
+        // region Zebra
+        if (zebraBarcodeReceiver != null)
             EventBus.getDefault().register(this);
+        //endregion Zebra
     }
 
     @Override
     protected void onStop()
     {
         super.onStop();
-        if (IfZebraDevice)
-        EventBus.getDefault().unregister(this);
+        // region Zebra
+        if (zebraBarcodeReceiver != null)
+            EventBus.getDefault().unregister(this);
+        //endregion Zebra
     }
 
 }

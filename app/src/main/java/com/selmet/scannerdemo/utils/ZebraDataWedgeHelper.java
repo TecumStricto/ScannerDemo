@@ -92,6 +92,14 @@ public class ZebraDataWedgeHelper {
             barcodeConfig.putString("PLUGIN_NAME", "BARCODE");
             barcodeConfig.putString("RESET_CONFIG", "true"); //  This is the default
             Bundle barcodeProps = new Bundle();
+            barcodeProps.putString("scanner_selection", "auto"); //  Could also specify a number here, the id returned from ENUMERATE_SCANNERS.
+            //  Do NOT use "Auto" here (with a capital 'A'), it must be lower case.
+            barcodeProps.putString("scanner_input_enabled", "true");
+            barcodeProps.putString("decoder_ean8", "true");
+            barcodeProps.putString("decoder_ean13", "true");
+            barcodeProps.putString("decoder_upca", "true");
+
+
             barcodeConfig.putBundle("PARAM_LIST", barcodeProps);
             profileConfig.putBundle("PLUGIN_CONFIG", barcodeConfig);
 
