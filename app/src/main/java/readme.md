@@ -1,1 +1,1 @@
-<h1> Using Zebra Datawedge with separate BroadcastReciver Class </h1>
+<h1>Using Zebra Datawedge with separate BroadcastReceiver Class</h1>
