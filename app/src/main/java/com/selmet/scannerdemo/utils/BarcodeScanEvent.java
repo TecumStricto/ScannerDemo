@@ -7,6 +7,16 @@ public class BarcodeScanEvent {
     private boolean isBarcoderRead=false;
     private boolean ifSelmetDataWedgeProfileExist=false;
 
+    public String getScannerStatus() {
+        return ScannerStatus;
+    }
+
+    public void setScannerStatus(String scannerStatus) {
+        ScannerStatus = scannerStatus;
+    }
+
+    private String  ScannerStatus ="";
+
     public boolean isIfSelmetDataWedgeProfileExist() {
         return ifSelmetDataWedgeProfileExist;
     }
@@ -45,6 +55,12 @@ public class BarcodeScanEvent {
     {
         this.ifSelmetDataWedgeProfileExist= ifSelmetDataWedgeProfileExist;
         this.isBarcoderRead=isBarcoderRead;
+    }
+
+    public BarcodeScanEvent(boolean  isBarcoderRead, String ScannerStatus)
+    {
+        this.isBarcoderRead= isBarcoderRead;
+        this.ScannerStatus=ScannerStatus;
     }
 
 

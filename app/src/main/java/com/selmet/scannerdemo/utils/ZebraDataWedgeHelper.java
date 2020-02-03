@@ -47,6 +47,9 @@ public class ZebraDataWedgeHelper {
     private static final String EXTRA_SCANNERINPUTPLUGIN_FROM_6_3 = "com.symbol.datawedge.api.SCANNER_INPUT_PLUGIN";
     private static final String ENABLE_PLUGIN = "ENABLE_PLUGIN";
     private static final String DISABLE_PLUGIN = "DISABLE_PLUGIN";
+    private static final String SUSPEND_PLUGIN  = "SUSPEND_PLUGIN ";
+    private static final String RESUME_PLUGIN  = "RESUME_PLUGIN ";
+    private static final String EXTRA_COMMAND_IDENTIFIER = "COMMAND_IDENTIFIER";
 
     public ZebraDataWedgeHelper (Context context){
         this.context=context;
@@ -71,6 +74,14 @@ public class ZebraDataWedgeHelper {
         b.putString(EXTRA_KEY_APPLICATION_NAME,context.getPackageName());
         b.putString(EXTRA_KEY_NOTIFICATION_TYPE, "SCANNER_STATUS");     // register for changes in scanner status
         sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_REGISTER_NOTIFICATION, b);
+    }
+
+
+    public void UnRegisterForStatusChanges() {
+        Bundle b = new Bundle();
+        b.putString(EXTRA_KEY_APPLICATION_NAME,context.getPackageName());
+        b.putString(EXTRA_KEY_NOTIFICATION_TYPE, "SCANNER_STATUS");     // register for changes in scanner status
+        sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_UNREGISTER_NOTIFICATION, b);
     }
 
     public String CreateProfile (){
@@ -149,6 +160,17 @@ public class ZebraDataWedgeHelper {
         sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_SET_CONFIG, profileConfig);
     }
 
+
+    public void ScannerInputPluginSuspend()
+    {
+        sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_SCANNERINPUTPLUGIN_FROM_6_3, SUSPEND_PLUGIN );
+    }
+
+    public void ScannerInputPluginResume()
+    {
+        sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_SCANNERINPUTPLUGIN_FROM_6_3, RESUME_PLUGIN  );
+    }
+
     public void ScannerInputPluginEnable()
     {
         sendDataWedgeIntentWithExtra(ACTION_DATAWEDGE, EXTRA_SCANNERINPUTPLUGIN_FROM_6_3, ENABLE_PLUGIN);
@@ -180,7 +202,36 @@ public class ZebraDataWedgeHelper {
         context.sendBroadcast(dwIntent);
     }
 
+    private void sendDataWedgeIntentWithExtra(String action, String extraKey, boolean extraValue)
+    {
+        Intent dwIntent = new Intent();
+        dwIntent.setAction(action);
+        dwIntent.putExtra(extraKey, extraValue);
+        if (bRequestSendResult)
+            dwIntent.putExtra(EXTRA_SEND_RESULT, "true");
+        context.sendBroadcast(dwIntent);
+    }
 
+    private void sendDataWedgeIntentWithExtra(String action, String extraKey, String[] extraValues)
+    {
+        Intent dwIntent = new Intent();
+        dwIntent.setAction(action);
+        dwIntent.putExtra(extraKey, extraValues);
+        if (bRequestSendResult)
+            dwIntent.putExtra(EXTRA_SEND_RESULT, "true");
+        context.sendBroadcast(dwIntent);
+    }
+
+    private void sendDataWedgeIntentWithExtra(String action, String extraKey, Bundle extras, String commandIdentifier)
+    {
+        //  Providing a command identifier implies a result is expected
+        Intent dwIntent = new Intent();
+        dwIntent.setAction(action);
+        dwIntent.putExtra(extraKey, extras);
+        dwIntent.putExtra(EXTRA_SEND_RESULT, "true");
+        dwIntent.putExtra(EXTRA_COMMAND_IDENTIFIER, commandIdentifier);
+        context.sendBroadcast(dwIntent);
+    }
 
 
 }

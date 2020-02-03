@@ -28,6 +28,8 @@ public class ZebraBarcodeReceiver extends BroadcastReceiver {
     private static final String EXTRA_KEY_NOTIFICATION_TYPE = "com.symbol.datawedge.api.NOTIFICATION_TYPE";
     private static final String EXTRA_UNREGISTER_NOTIFICATION = "com.symbol.datawedge.api.UNREGISTER_FOR_NOTIFICATION";
     private static final String EXTRA_KEY_VALUE_SCANNER_STATUS = "SCANNER_STATUS";
+    private static final String NOTIFICATION="com.symbol.datawedge.api.NOTIFICATION";
+    private static final String NOTIFICATION_TYPE="NOTIFICATION_TYPE";
 
    // profiles
     private static final String GET_PROFILES_LIST = "com.symbol.datawedge.api.GET_PROFILES_LIST";
@@ -45,6 +47,10 @@ public class ZebraBarcodeReceiver extends BroadcastReceiver {
     private static final String EXTRA_RESULT_GET_CONFIG = "com.symbol.datawedge.api.RESULT_GET_CONFIG";
     private static final String EXTRA_RESULT_GET_DISABLED_APP_LIST = "com.symbol.datawedge.api.RESULT_GET_DISABLED_APP_LIST";
 
+
+    // scaned data
+    private static final String LABEL_TYPE ="com.symbol.datawedge.label_type";
+    private static final String SCANNED_DATA ="com.symbol.datawedge.data_string";
 
     public  ZebraBarcodeReceiver(@NonNull Context context)
     {
@@ -66,9 +72,23 @@ public class ZebraBarcodeReceiver extends BroadcastReceiver {
 
         }
 
-
-        if(intent.getAction().equals(context.getResources().getString(R.string.activity_result_action_from_service)))
+        if(intent.getAction().equals(ACTION_RESULT_NOTIFICATION))
         {
+            if(intent.hasExtra(NOTIFICATION)) {
+                Bundle b = intent.getBundleExtra(NOTIFICATION);
+                String nOTIFICATION_TYPE = b.getString(NOTIFICATION_TYPE);
+                if (nOTIFICATION_TYPE != null) {
+                    switch (nOTIFICATION_TYPE) {
+                        case EXTRA_KEY_VALUE_SCANNER_STATUS:
+                            EventBus.getDefault().post(new BarcodeScanEvent(false, b.getString("STATUS")));
+                            // Log.d(TAG, "SCANNER_STATUS: status: " + b.getString("STATUS") + ", profileName: " + b.getString("PROFILE_NAME"));
+                            break;
+                    }
+                }
+            }
+        }
+
+        if(intent.getAction().equals(context.getResources().getString(R.string.activity_result_action_from_service))) {
             Bundle extras = intent.getExtras();
 
 //            if (intent.hasExtra(EXTRA_COMMAND)) {
@@ -81,16 +101,17 @@ public class ZebraBarcodeReceiver extends BroadcastReceiver {
 //            {
 //
 //            }
-
-            if (intent.hasExtra(RESULT_GET_PROFILES_LIST)) {
-                //check if SelmetDW profile exist
-                String[] profilesList = intent.getStringArrayExtra(RESULT_GET_PROFILES_LIST);
-                for (String str : profilesList) {
-                    if (str.contains(EXTRA_PROFILENAME)) {
-                        EventBus.getDefault().post(new BarcodeScanEvent(true, false));
+            if (extras != null) {
+                if (intent.hasExtra(RESULT_GET_PROFILES_LIST)) {
+                    //check if SelmetDW profile exist
+                    String[] profilesList = intent.getStringArrayExtra(RESULT_GET_PROFILES_LIST);
+                    for (String str : profilesList) {
+                        if (str.contains(EXTRA_PROFILENAME)) {
+                            EventBus.getDefault().post(new BarcodeScanEvent(true, false));
+                        }
                     }
+                    EventBus.getDefault().post(new BarcodeScanEvent(false, false));
                 }
-                EventBus.getDefault().post(new BarcodeScanEvent(false, false));
             }
         }
 
@@ -98,10 +119,9 @@ public class ZebraBarcodeReceiver extends BroadcastReceiver {
         if(intent.getAction().equals(context.getResources().getString(R.string.activity_intent_filter_action)))
               ////  Received a barcode scan
         {
-
-                String decodedData = intent.getStringExtra(context.getResources().getString(R.string.datawedge_intent_key_data));
-                String decodedLabelType = intent.getStringExtra(context.getResources().getString(R.string.datawedge_intent_key_label_type));
-                EventBus.getDefault().post(new BarcodeScanEvent(decodedData, decodedLabelType, true));
+                //String decodedData = intent.getStringExtra(context.getResources().getString(R.string.datawedge_intent_key_data));
+                //String decodedLabelType = intent.getStringExtra(context.getResources().getString(R.string.datawedge_intent_key_label_type));
+                EventBus.getDefault().post(new BarcodeScanEvent(intent.getStringExtra(SCANNED_DATA).trim(), intent.getStringExtra(LABEL_TYPE).trim(), true));
 
         }
 

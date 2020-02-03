@@ -1,0 +1,1 @@
+Using Zebra Datawedge with separate BroadcasrReciver Class

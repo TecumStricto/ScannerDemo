@@ -60,6 +60,7 @@ public class InventoryActivity extends AppCompatActivity {
                     //region Zebra
                     if (zebraBarcodeReceiver != null) {
                         zebraDataWedgeHelper.ScannerInputPluginEnable();
+                        //zebraDataWedgeHelper.ProfileOnOff("true");
                     }
                     //endregion Zebra
                 }
@@ -73,6 +74,7 @@ public class InventoryActivity extends AppCompatActivity {
                     //region Zebra
                     if (zebraBarcodeReceiver != null) {
                         zebraDataWedgeHelper.ScannerInputPluginDisable();
+                        //zebraDataWedgeHelper.ProfileOnOff("false");
                     }
                     //endregion Zebra
 
@@ -87,11 +89,18 @@ public class InventoryActivity extends AppCompatActivity {
                     //region Zebra
                     if (zebraBarcodeReceiver != null) {
                         zebraDataWedgeHelper.ScannerInputPluginEnable();
+                        //zebraDataWedgeHelper.ProfileOnOff("true");
+
                     }
                     //endregion Zebra
                 }
             }
         });
+
+
+
+        //barcodeEditText.requestFocus();
+
     }
 
 
@@ -107,9 +116,11 @@ public class InventoryActivity extends AppCompatActivity {
         //boolean isBarcodeRead=event.isBarcoderRead();
 
        //If SelmetDW profile doesn't exist create it
-        if (!event.isIfSelmetDataWedgeProfileExist() && !event.isBarcoderRead())
-            zebraDataWedgeHelper.CreateProfile();
+       // if (!event.isIfSelmetDataWedgeProfileExist() && !event.isBarcoderRead())
+       //     zebraDataWedgeHelper.CreateProfile();
 
+         if (!event.isBarcoderRead() && event.getScannerStatus()!=null)
+             serialEditText.setText(event.getScannerStatus());
 
         if (barcodeEditText.hasFocus() && event.isBarcoderRead()) {
             barcodeEditText.setText(event.getDecodedData());
@@ -129,8 +140,15 @@ public class InventoryActivity extends AppCompatActivity {
         // region Zebra
         if (zebraBarcodeReceiver != null) {
             zebraBarcodeReceiver.registerReceivers(zebraBarcodeReceiver);
-            zebraDataWedgeHelper.GetProfileList();
-            zebraDataWedgeHelper.SetDefaultConfig();
+
+            // if scanner notification needed
+            zebraDataWedgeHelper.RegisterForStatusChanges();
+
+            // this should be done only on application enter
+            // otherwise, it slows down Activity load up, to start scan, 3  presses of scan button needed
+            //zebraDataWedgeHelper.GetProfileList();
+            //zebraDataWedgeHelper.SetDefaultConfig();
+            //
         }
         //endregion Zebra
     }
@@ -141,6 +159,7 @@ public class InventoryActivity extends AppCompatActivity {
         super.onPause();
         // region Zebra
         if (zebraBarcodeReceiver != null) {
+            zebraDataWedgeHelper.UnRegisterForStatusChanges();
             zebraBarcodeReceiver.unRegisterReceivers(zebraBarcodeReceiver);
             zebraBarcodeReceiver.unRegisterScannerStatus();
             EventBus.getDefault().unregister(this);
